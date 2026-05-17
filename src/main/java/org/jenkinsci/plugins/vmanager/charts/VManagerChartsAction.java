@@ -10,7 +10,7 @@ import org.jenkinsci.plugins.vmanager.charts.model.ChartDefinition;
 import org.jenkinsci.plugins.vmanager.charts.model.MetricDefinition;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
 
-import javax.annotation.CheckForNull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;

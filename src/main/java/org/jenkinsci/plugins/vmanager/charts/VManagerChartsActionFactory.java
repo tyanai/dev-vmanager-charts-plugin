@@ -5,7 +5,7 @@ import hudson.model.Action;
 import hudson.model.Job;
 import jenkins.model.TransientActionFactory;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -21,9 +21,9 @@ public class VManagerChartsActionFactory extends TransientActionFactory<Job> {
         return Job.class;
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public Collection<? extends Action> createFor(@Nonnull Job target) {
+    public Collection<? extends Action> createFor(@NonNull Job target) {
         VManagerChartsJobProperty property =
                 (VManagerChartsJobProperty) target.getProperty(VManagerChartsJobProperty.class);
         if (property == null || !property.isEnabled()) {

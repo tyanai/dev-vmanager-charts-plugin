@@ -20,7 +20,7 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -82,7 +82,7 @@ public class ChartDefinition extends AbstractDescribableImpl<ChartDefinition> {
 
         private static final Logger LOGGER = Logger.getLogger(DescriptorImpl.class.getName());
 
-        @Nonnull
+        @NonNull
         @Override
         public String getDisplayName() {
             return "Custom Chart";
@@ -90,7 +90,7 @@ public class ChartDefinition extends AbstractDescribableImpl<ChartDefinition> {
 
         @Override
         public ChartDefinition newInstance(org.kohsuke.stapler.StaplerRequest2 req,
-                                           @Nonnull net.sf.json.JSONObject formData)
+                                           @NonNull net.sf.json.JSONObject formData)
                 throws FormException {
             // Forbid duplicate nicknames within the same chart. Nicknames are
             // the per-chart unique series identifier when set, so allowing

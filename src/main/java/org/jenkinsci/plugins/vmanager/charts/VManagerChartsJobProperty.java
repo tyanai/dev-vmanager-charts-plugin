@@ -19,13 +19,13 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.jenkinsci.plugins.vmanager.charts.util.JsonConfigLoader;
 import net.sf.json.JSONObject;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -256,7 +256,7 @@ public class VManagerChartsJobProperty extends JobProperty<Job<?, ?>> {
     @Extension
     public static class DescriptorImpl extends JobPropertyDescriptor {
 
-        @Nonnull
+        @NonNull
         @Override
         public String getDisplayName() {
             return "vManager Charts";
@@ -347,11 +347,11 @@ public class VManagerChartsJobProperty extends JobProperty<Job<?, ?>> {
          * The {@code credentialsId} field is never included in the output.
          */
         @RequirePOST
-        public void doExportConfig(StaplerRequest req, StaplerResponse rsp) throws Exception {
+        public void doExportConfig(StaplerRequest2 req, StaplerResponse2 rsp) throws Exception {
             JSONObject form = req.getSubmittedForm();
             JSONObject ours = findPluginSubtree(form);
             if (ours == null) {
-                rsp.sendError(StaplerResponse.SC_BAD_REQUEST,
+                rsp.sendError(StaplerResponse2.SC_BAD_REQUEST,
                         "Could not locate vManager Charts configuration in the submitted form.");
                 return;
             }
@@ -359,7 +359,7 @@ public class VManagerChartsJobProperty extends JobProperty<Job<?, ?>> {
             try {
                 bound = req.bindJSON(VManagerChartsJobProperty.class, ours);
             } catch (Exception bindEx) {
-                rsp.sendError(StaplerResponse.SC_BAD_REQUEST,
+                rsp.sendError(StaplerResponse2.SC_BAD_REQUEST,
                         "Failed to parse configuration: " + bindEx.getMessage());
                 return;
             }

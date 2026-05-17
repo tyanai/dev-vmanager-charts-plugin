@@ -13,8 +13,8 @@
     </parent>
 
     <groupId>io.jenkins.plugins</groupId>
-    <artifactId>vmanager-charts-plugin</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>vmanager-charts</artifactId>
+    <version>${revision}${changelist}</version>
     <packaging>hpi</packaging>
 
     <name>vManager Charts Plugin</name>
@@ -32,17 +32,13 @@
         <changelist>999999-SNAPSHOT</changelist>
         <gitHubRepo>jenkinsci/vmanager-charts-plugin</gitHubRepo>
         <findbugs.failOnError>false</findbugs.failOnError>
-        <jenkins.baseline>2.479.3</jenkins.baseline>
+        <jenkins.baseline>2.528.3</jenkins.baseline>
         <jenkins.version>${jenkins.baseline}</jenkins.version>
+        <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
+        <ban-deprecated-stapler.skip>false</ban-deprecated-stapler.skip>
+        <ban-commons-lang-2.skip>false</ban-commons-lang-2.skip>
     </properties>
 
-    <developers>
-        <developer>
-            <id>tyanai</id>
-            <name>Tal Yanai</name>
-            <email>tyanai@cadence.com</email>
-        </developer>
-    </developers>
 
     <scm>
         <connection>scm:git:https://github.com/${gitHubRepo}.git</connection>
@@ -55,35 +51,10 @@
         <dependencies>
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
-                <artifactId>bom-2.479.x</artifactId>
-                <version>5054.v620b_5d2b_d5e6</version>
+                <artifactId>bom-2.528.x</artifactId>
+                <version>6453.v115ff6f496dd</version>
                 <scope>import</scope>
                 <type>pom</type>
-            </dependency>
-            <dependency>
-                <groupId>io.jenkins.plugins</groupId>
-                <artifactId>asm-api</artifactId>
-                <version>9.8-135.vb_2239d08ee90</version>
-            </dependency>
-            <dependency>
-                <groupId>org.ow2.asm</groupId>
-                <artifactId>asm</artifactId>
-                <version>9.8</version>
-            </dependency>
-            <dependency>
-                <groupId>org.ow2.asm</groupId>
-                <artifactId>asm-commons</artifactId>
-                <version>9.8</version>
-            </dependency>
-            <dependency>
-                <groupId>org.ow2.asm</groupId>
-                <artifactId>asm-tree</artifactId>
-                <version>9.8</version>
-            </dependency>
-            <dependency>
-                <groupId>org.ow2.asm</groupId>
-                <artifactId>asm-util</artifactId>
-                <version>9.8</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -21,7 +21,7 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import hudson.RelativePath;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -192,7 +192,7 @@ public class MetricDefinition extends AbstractDescribableImpl<MetricDefinition> 
 
         private static final Logger LOGGER = Logger.getLogger(DescriptorImpl.class.getName());
 
-        @Nonnull
+        @NonNull
         @Override
         public String getDisplayName() {
             return "Custom Metric";

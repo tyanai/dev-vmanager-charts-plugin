@@ -5,7 +5,7 @@ import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * One full filesystem path to a vManager refinement (or vPlan refinement) file.
@@ -28,7 +28,7 @@ public class RefinementFile extends AbstractDescribableImpl<RefinementFile> {
 
     @Extension
     public static class DescriptorImpl extends Descriptor<RefinementFile> {
-        @Nonnull
+        @NonNull
         @Override
         public String getDisplayName() {
             return "Refinement File";

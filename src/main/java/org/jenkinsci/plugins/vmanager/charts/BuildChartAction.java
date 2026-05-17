@@ -4,7 +4,7 @@ import hudson.model.Action;
 import hudson.model.Run;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
 
-import javax.annotation.CheckForNull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

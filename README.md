@@ -106,8 +106,8 @@ Optional:
 
 ## Requirements
 
-- Jenkins 2.479.3+
-- Java 17+
+- Jenkins 2.528.3+
+- Java 21+
 
 ## Installation
 
