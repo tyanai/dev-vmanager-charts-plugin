@@ -1,8 +1,36 @@
 (function () {
+    // Pin the tooltip when the user left-clicks a data point so they can move
+    // the mouse into the tooltip and copy text from it. A second click on an
+    // empty area of the chart (or on another point) restores the default
+    // hover behaviour.
+    function enablePinnableTooltip(chart) {
+        var pinned = false;
+        chart.on('click', function (params) {
+            if (!params || params.componentType !== 'series') return;
+            pinned = true;
+            chart.setOption({ tooltip: { enterable: true, triggerOn: 'none' } });
+            chart.dispatchAction({
+                type: 'showTip',
+                seriesIndex: params.seriesIndex,
+                dataIndex: params.dataIndex
+            });
+        });
+        chart.getZr().on('click', function (event) {
+            if (pinned && (!event || !event.target)) {
+                pinned = false;
+                chart.dispatchAction({ type: 'hideTip' });
+                chart.setOption({ tooltip: { enterable: true, triggerOn: 'mousemove|click' } });
+            }
+        });
+    }
+
     function buildOption(small, medium, large, xName, xLabel) {
         return {
             tooltip: {
                 trigger: 'item',
+                enterable: true,
+                triggerOn: 'mousemove|click',
+                extraCssText: 'user-select: text; -webkit-user-select: text; -ms-user-select: text;',
                 formatter: function (p) {
                     var html = p.seriesName
                         + '<br/>' + xLabel + ': ' + p.value[0].toFixed(2) + ' min'
@@ -11,6 +39,14 @@
                     // (undefined) for builds saved before this field was added.
                     if (p.value.length > 2 && typeof p.value[2] === 'number') {
                         html += '<br/>Estimated Duration: ' + p.value[2].toFixed(2) + ' min';
+                    }
+                    // value[3] = vManager run id; absent for legacy builds.
+                    if (p.value.length > 3 && typeof p.value[3] === 'number') {
+                        html += '<br/>ID: ' + Math.round(p.value[3]);
+                    }
+                    // value[4] = vManager actual_index_vmgr; absent for legacy builds.
+                    if (p.value.length > 4 && typeof p.value[4] === 'number') {
+                        html += '<br/>Actual Index: ' + Math.round(p.value[4]);
                     }
                     return html;
                 }
@@ -59,6 +95,8 @@
         if (!domStart || !domEnd) return;
         var chartStart = echarts.init(domStart);
         var chartEnd   = echarts.init(domEnd);
+        enablePinnableTooltip(chartStart);
+        enablePinnableTooltip(chartEnd);
         chartStart.showLoading();
         chartEnd.showLoading();
 

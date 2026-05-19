@@ -223,8 +223,19 @@ public class CustomMetricsRunListener extends RunListener<Run<?, ?>> {
                         serverUrl, sessions, creds, listener);
                 List<VManagerRunsClient.RunPoint> points =
                         VManagerRunsClient.fetchRunPoints(
-                                serverUrl, sessions, sessionStartMs, creds, listener);
-                int n = points.size();
+                                serverUrl, sessions, sessionStartMs, creds, listener);                // Per-session TAT warnings (sessions whose configured parallelism
+                // could not actually be met). Non-fatal: any failure just yields
+                // an empty map and no warnings are shown.
+                java.util.Map<String, String> tatWarnings = java.util.Collections.emptyMap();
+                try {
+                    tatWarnings = VManagerSessionsClient.fetchSessionTatWarnings(
+                            serverUrl, sessions, creds, listener);
+                } catch (Exception e) {
+                    LOGGER.log(Level.WARNING, "Failed to fetch session TAT warnings", e);
+                    listener.getLogger().println(
+                            "[vManager Charts] WARNING: could not fetch session TAT warnings: "
+                                    + e.getMessage());
+                }                int n = points.size();
                 List<double[]> small     = new java.util.ArrayList<>();
                 List<double[]> medium    = new java.util.ArrayList<>();
                 List<double[]> large     = new java.util.ArrayList<>();
@@ -237,11 +248,12 @@ public class CustomMetricsRunListener extends RunListener<Run<?, ?>> {
                     int mediumBound = third + third;
                     for (int i = 0; i < n; i++) {
                         VManagerRunsClient.RunPoint pt = points.get(i);
-                        // Third element carries the vManager "estimated_duration_vmgr"
-                        // (already converted to minutes); it is not plotted on the axes,
+                        // Indices 2..4 carry the vManager "estimated_duration_vmgr"
+                        // (already converted to minutes), the run "id" and the
+                        // "actual_index_vmgr"; they are not plotted on the axes,
                         // only shown in the tooltip.
-                        double[] xyStart = new double[]{ pt.timeToStartMinutes, pt.durationMinutes, pt.estimatedDurationMinutes };
-                        double[] xyEnd   = new double[]{ pt.timeToEndMinutes,   pt.durationMinutes, pt.estimatedDurationMinutes };
+                        double[] xyStart = new double[]{ pt.timeToStartMinutes, pt.durationMinutes, pt.estimatedDurationMinutes, pt.id, pt.actualIndex };
+                        double[] xyEnd   = new double[]{ pt.timeToEndMinutes,   pt.durationMinutes, pt.estimatedDurationMinutes, pt.id, pt.actualIndex };
                         if (i < smallBound) {
                             small.add(xyStart);
                             smallEnd.add(xyEnd);
@@ -255,7 +267,7 @@ public class CustomMetricsRunListener extends RunListener<Run<?, ?>> {
                     }
                 }
                 run.addAction(new RegressionOptimizationBuildAction(
-                        small, medium, large, smallEnd, mediumEnd, largeEnd));
+                        small, medium, large, smallEnd, mediumEnd, largeEnd, sessions, tatWarnings));
                 savedAction = true;
                 BuildLog.trace(listener, String.format(
                         "[vManager Charts] runs duration: rows=%d small=%d medium=%d large=%d",

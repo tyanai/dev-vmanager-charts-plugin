@@ -8,6 +8,7 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Build-level action that adds a "vManager Charts" link to every individual
@@ -68,6 +69,34 @@ public class BuildChartAction implements Action {
         return p != null && p.isEnabled()
                 && p.isShowBuildLevelCharts()
                 && p.isShowRegressionOptimizationChart();
+    }
+
+    /**
+     * vManager session names this build was associated with (resolved from
+     * {@code .sessions.input} or, as a fallback, {@code .session_launch.output}).
+     * Returns an empty list when no build-level chart data was recorded yet.
+     * Exposed to the build-level charts page so it can list them under the heading.
+     */
+    public List<String> getSessions() {
+        if (run == null) return Collections.emptyList();
+        RegressionOptimizationBuildAction stored =
+                run.getAction(RegressionOptimizationBuildAction.class);
+        if (stored == null) return Collections.emptyList();
+        return stored.getSessions();
+    }
+
+    /**
+     * Per-session warning text (e.g. TAT misconfiguration). Sessions without
+     * a warning are absent from the returned map. Exposed to the build-level
+     * charts page so it can render an inline disclaimer next to each session
+     * name.
+     */
+    public Map<String, String> getSessionWarnings() {
+        if (run == null) return Collections.emptyMap();
+        RegressionOptimizationBuildAction stored =
+                run.getAction(RegressionOptimizationBuildAction.class);
+        if (stored == null) return Collections.emptyMap();
+        return stored.getSessionWarnings();
     }
 
     // ── Regression Optimization Chart (chart #1) ─────────────────────────

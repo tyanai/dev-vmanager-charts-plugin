@@ -1,6 +1,32 @@
 (function() {
     'use strict';
 
+    // Pin the tooltip when the user left-clicks a data point so they can move
+    // the mouse into the tooltip and copy text from it. A second click on an
+    // empty area of the chart (or on another point) restores the default
+    // hover behaviour. Not applied to charts that already consume click for
+    // drill-down navigation (e.g. test-results).
+    function enablePinnableTooltip(chart) {
+        var pinned = false;
+        chart.on('click', function (params) {
+            if (!params || params.componentType !== 'series') return;
+            pinned = true;
+            chart.setOption({ tooltip: { enterable: true, triggerOn: 'none' } });
+            chart.dispatchAction({
+                type: 'showTip',
+                seriesIndex: params.seriesIndex,
+                dataIndex: params.dataIndex
+            });
+        });
+        chart.getZr().on('click', function (event) {
+            if (pinned && (!event || !event.target)) {
+                pinned = false;
+                chart.dispatchAction({ type: 'hideTip' });
+                chart.setOption({ tooltip: { enterable: true, triggerOn: 'mousemove|click' } });
+            }
+        });
+    }
+
     function ready(fn) {
         if (document.readyState !== 'loading') {
             fn();
@@ -39,6 +65,7 @@
                     var chartDom = document.getElementById('customMetricChart_' + index);
                     if (!chartDom) return;
                     var myChart = echarts.init(chartDom);
+                    enablePinnableTooltip(myChart);
                     renderMixedChart(myChart, data);
                 });
             } catch (e) {
@@ -84,6 +111,9 @@
         var option = {
             tooltip: {
                 trigger: 'axis',
+                enterable: true,
+                triggerOn: 'mousemove|click',
+                extraCssText: 'user-select: text; -webkit-user-select: text; -ms-user-select: text;',
                 axisPointer: { type: hasBar ? 'shadow' : 'cross' }
             },
             legend: {
@@ -122,6 +152,7 @@
         if (!chartDom) return;
 
         var myChart = echarts.init(chartDom);
+        enablePinnableTooltip(myChart);
         myChart.showLoading();
 
         vManagerChartsProxy.getBuildDurationData(function(response) {
@@ -140,6 +171,7 @@
         if (!chartDom) return;
 
         var myChart = echarts.init(chartDom);
+        enablePinnableTooltip(myChart);
         myChart.showLoading();
 
         vManagerChartsProxy.getSuccessRateData(function(response) {
@@ -205,6 +237,9 @@
         var option = {
             tooltip: {
                 trigger: 'axis',
+                enterable: true,
+                triggerOn: 'mousemove|click',
+                extraCssText: 'user-select: text; -webkit-user-select: text; -ms-user-select: text;',
                 axisPointer: {
                     type: 'cross'
                 }
@@ -281,6 +316,9 @@
         var option = {
             tooltip: {
                 trigger: 'axis',
+                enterable: true,
+                triggerOn: 'mousemove|click',
+                extraCssText: 'user-select: text; -webkit-user-select: text; -ms-user-select: text;',
                 axisPointer: {
                     type: 'shadow'
                 }

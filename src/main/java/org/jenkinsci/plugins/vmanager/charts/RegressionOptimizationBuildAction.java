@@ -5,7 +5,9 @@ import hudson.model.Action;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Per-build action that records the data for the
@@ -36,18 +38,50 @@ public class RegressionOptimizationBuildAction implements Action, Serializable {
     private List<double[]> mediumEnd;
     private List<double[]> largeEnd;
 
+    // vManager session names that produced these points (added later;
+    // may be null on legacy saved builds).
+    private List<String> sessions;
+
+    // Per-session warning (added later); keyed by session name; may be null
+    // or absent for sessions that have no warning, and on legacy saved builds.
+    private Map<String, String> sessionWarnings;
+
     public RegressionOptimizationBuildAction(List<double[]> small,
                                              List<double[]> medium,
                                              List<double[]> large,
                                              List<double[]> smallEnd,
                                              List<double[]> mediumEnd,
                                              List<double[]> largeEnd) {
-        this.small     = small     == null ? new ArrayList<>() : new ArrayList<>(small);
-        this.medium    = medium    == null ? new ArrayList<>() : new ArrayList<>(medium);
-        this.large     = large     == null ? new ArrayList<>() : new ArrayList<>(large);
-        this.smallEnd  = smallEnd  == null ? new ArrayList<>() : new ArrayList<>(smallEnd);
-        this.mediumEnd = mediumEnd == null ? new ArrayList<>() : new ArrayList<>(mediumEnd);
-        this.largeEnd  = largeEnd  == null ? new ArrayList<>() : new ArrayList<>(largeEnd);
+        this(small, medium, large, smallEnd, mediumEnd, largeEnd, null, null);
+    }
+
+    public RegressionOptimizationBuildAction(List<double[]> small,
+                                             List<double[]> medium,
+                                             List<double[]> large,
+                                             List<double[]> smallEnd,
+                                             List<double[]> mediumEnd,
+                                             List<double[]> largeEnd,
+                                             List<String> sessions) {
+        this(small, medium, large, smallEnd, mediumEnd, largeEnd, sessions, null);
+    }
+
+    public RegressionOptimizationBuildAction(List<double[]> small,
+                                             List<double[]> medium,
+                                             List<double[]> large,
+                                             List<double[]> smallEnd,
+                                             List<double[]> mediumEnd,
+                                             List<double[]> largeEnd,
+                                             List<String> sessions,
+                                             Map<String, String> sessionWarnings) {
+        this.small           = small     == null ? new ArrayList<>() : new ArrayList<>(small);
+        this.medium          = medium    == null ? new ArrayList<>() : new ArrayList<>(medium);
+        this.large           = large     == null ? new ArrayList<>() : new ArrayList<>(large);
+        this.smallEnd        = smallEnd  == null ? new ArrayList<>() : new ArrayList<>(smallEnd);
+        this.mediumEnd       = mediumEnd == null ? new ArrayList<>() : new ArrayList<>(mediumEnd);
+        this.largeEnd        = largeEnd  == null ? new ArrayList<>() : new ArrayList<>(largeEnd);
+        this.sessions        = sessions  == null ? new ArrayList<>() : new ArrayList<>(sessions);
+        this.sessionWarnings = sessionWarnings == null
+                ? new LinkedHashMap<>() : new LinkedHashMap<>(sessionWarnings);
     }
 
     public List<double[]> getSmall()  { return Collections.unmodifiableList(small);  }
@@ -62,6 +96,15 @@ public class RegressionOptimizationBuildAction implements Action, Serializable {
     }
     public List<double[]> getLargeEnd()  {
         return Collections.unmodifiableList(largeEnd  == null ? Collections.<double[]>emptyList() : largeEnd);
+    }
+
+    public List<String> getSessions() {
+        return Collections.unmodifiableList(sessions == null ? Collections.<String>emptyList() : sessions);
+    }
+
+    public Map<String, String> getSessionWarnings() {
+        return Collections.unmodifiableMap(
+                sessionWarnings == null ? Collections.<String, String>emptyMap() : sessionWarnings);
     }
 
     @Override public String getIconFileName() { return null; }

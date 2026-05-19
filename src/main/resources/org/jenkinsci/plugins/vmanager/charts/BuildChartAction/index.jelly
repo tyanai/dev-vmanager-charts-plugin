@@ -5,6 +5,23 @@
         <l:main-panel>
             <h1>${it.pageHeading}</h1>
 
+            <j:if test="${!empty(it.sessions)}">
+                <div class="vmgr-sessions" style="margin: 6px 0 14px 0;">
+                    <b>Session:</b>
+                    <ul style="margin: 4px 0 0 22px; padding: 0;">
+                        <j:forEach var="s" items="${it.sessions}">
+                            <j:set var="warn" value="${it.sessionWarnings[s]}"/>
+                            <li>
+                                ${s}
+                                <j:if test="${!empty(warn)}">
+                                    <span style="color:#c00; margin-left:6px;" title="${warn}">[⚠ ${warn}]</span>
+                                </j:if>
+                            </li>
+                        </j:forEach>
+                    </ul>
+                </div>
+            </j:if>
+
             <st:adjunct includes="io.jenkins.plugins.echarts"/>
 
             <st:bind var="vManagerBuildChartProxy" value="${it}"/>
