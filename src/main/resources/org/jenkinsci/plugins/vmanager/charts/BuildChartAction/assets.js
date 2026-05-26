@@ -104,6 +104,11 @@
             console.error('[vManager Charts] Stapler proxy not bound.');
             return;
         }
+        initRunsDuration();
+        initRunAnomalies();
+    }
+
+    function initRunsDuration() {
         var domStart = document.getElementById('runsDurationStartChart');
         var domEnd   = document.getElementById('runsDurationEndChart');
         if (!domStart || !domEnd) return;
@@ -153,6 +158,93 @@
             chartStart.resize();
             chartEnd.resize();
         });
+    }
+
+    // ── Run Anomalies (4 stacked bars: Duration / CPU Time / Max Memory /
+    //    Avg Memory; each split into None / Unknown / Anomaly). Colours and
+    //    series order are fixed per spec; the four categories and their
+    //    values come from the server. ────────────────────────────────────
+    function initRunAnomalies() {
+        var dom = document.getElementById('runAnomaliesChart');
+        if (!dom) return;
+        var chart = echarts.init(dom);
+        enablePinnableTooltip(chart);
+        chart.showLoading();
+
+        vManagerBuildChartProxy.getRunAnomaliesData(function (response) {
+            try {
+                var data = response.responseObject() || {};
+                chart.hideLoading();
+
+                if (data.error) {
+                    var errBox = document.getElementById('runAnomaliesError');
+                    if (errBox) {
+                        errBox.textContent = data.error;
+                        errBox.style.display = 'block';
+                    }
+                    console.warn('[vManager Charts] run anomalies:', data.error);
+                }
+
+                var categories = data.categories || [];
+                var none       = data.none       || [];
+                var unknown    = data.unknown    || [];
+                var anomaly    = data.anomaly    || [];
+
+                chart.setOption({
+                    tooltip: {
+                        trigger: 'axis',
+                        enterable: true,
+                        triggerOn: 'mousemove|click',
+                        extraCssText: 'user-select: text; -webkit-user-select: text;',
+                        axisPointer: { type: 'shadow' }
+                    },
+                    legend: {
+                        data: ['None', 'Anomaly', 'Unknown'],
+                        bottom: 0,
+                        right: 10
+                    },
+                    grid: { top: 30, left: '3%', right: '4%', bottom: 50, containLabel: true },
+                    xAxis: {
+                        type: 'category',
+                        data: categories,
+                        axisLabel: { interval: 0 }
+                    },
+                    yAxis: { type: 'value', name: 'Run Count' },
+                    series: [
+                        // Stacking order (bottom → top): None, Anomaly, Unknown
+                        // to match the reference image where Unknown sits on top.
+                        { name: 'None',    type: 'bar', stack: 'total',
+                          data: none,    itemStyle: { color: '#d7ede0' },
+                          label: { show: true, position: 'insideBottom', color: '#4a4a4a', fontSize: 11 } },
+                        { name: 'Anomaly', type: 'bar', stack: 'total',
+                          data: anomaly, itemStyle: { color: '#ff9500' },
+                          label: { show: true, position: 'inside', color: '#fff', fontSize: 11 } },
+                        { name: 'Unknown', type: 'bar', stack: 'total',
+                          data: unknown, itemStyle: { color: '#c8cfde' },
+                          label: { show: true, position: 'insideTop', color: '#4a4a4a', fontSize: 11 } }
+                    ],
+                    toolbox: {
+                        showTitle: false,
+                        tooltip: {
+                            show: true,
+                            position: 'top',
+                            backgroundColor: 'rgba(50,50,50,0.9)',
+                            textStyle: { color: '#fff', fontSize: 12 }
+                        },
+                        feature: {
+                            dataView:    { title: 'Data View', lang: ['Data View', 'Close', 'Refresh'], readOnly: true },
+                            restore:     { title: 'Restore' },
+                            saveAsImage: { title: 'Save' }
+                        }
+                    }
+                });
+            } catch (e) {
+                chart.hideLoading();
+                console.error('[vManager Charts] run anomalies error:', e);
+            }
+        });
+
+        window.addEventListener('resize', function () { chart.resize(); });
     }
 
     if (document.readyState === 'loading') {

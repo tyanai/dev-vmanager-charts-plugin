@@ -37,7 +37,7 @@ public class BuildChartActionFactory extends TransientActionFactory<Run> {
         if (p == null || !p.isEnabled() || !p.isShowBuildLevelCharts()) {
             return Collections.emptyList();
         }
-        if (!p.isShowRegressionOptimizationChart()) {
+        if (!p.isShowRegressionOptimizationChart() && !p.isShowRunAnomaliesChart()) {
             // No build-level charts selected — nothing to render, hide the link.
             return Collections.emptyList();
         }

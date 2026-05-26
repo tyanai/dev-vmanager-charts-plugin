@@ -52,24 +52,42 @@
         }
         initDurationChart();
         initSuccessRateChart();
-        initTestResultsChart();
         initGroupedRunsCharts();
         initCustomMetricsCharts();
     }
 
     function initGroupedRunsCharts() {
+        // Eagerly init every grouped-runs chart instance and show the
+        // ECharts loading spinner so the cards aren't blank while the
+        // server-side fetch is in flight. The DOMs are present even
+        // before data arrives (one <div id="groupedRunsChart_N"> per
+        // card), so we can attach the spinner now and swap in data
+        // when the proxy callback fires.
+        var pending = [];
+        var i = 0;
+        while (true) {
+            var dom = document.getElementById('groupedRunsChart_' + i);
+            if (!dom) break;
+            var chart = echarts.init(dom);
+            registerWithDashboard(dom, chart);
+            chart.showLoading('default', { text: 'Loading\u2026' });
+            pending.push(chart);
+            i++;
+        }
+        if (pending.length === 0) return;
+
         vManagerChartsProxy.getGroupedRunsChartsData(function (response) {
             try {
                 var arr = response.responseObject();
-                if (!arr || arr.length === 0) return;
-                arr.forEach(function (data, index) {
-                    var chartDom = document.getElementById('groupedRunsChart_' + index);
-                    if (!chartDom) return;
-                    var myChart = echarts.init(chartDom);
-                    registerWithDashboard(chartDom, myChart);
+                if (!arr) arr = [];
+                pending.forEach(function (myChart, index) {
+                    myChart.hideLoading();
+                    var data = arr[index];
+                    if (!data) return;
                     renderGroupedRunsHeatmap(myChart, data);
                 });
             } catch (e) {
+                pending.forEach(function (c) { try { c.hideLoading(); } catch (_) {} });
                 console.error('[vManager Charts] grouped runs data error:', e);
             }
         });
@@ -228,19 +246,36 @@
     }
 
     function initCustomMetricsCharts() {
+        // Same pattern as initGroupedRunsCharts: eagerly init the chart
+        // instances and show the spinner before kicking off the proxy
+        // fetch, so the user sees an immediate loading indicator instead
+        // of a blank card.
+        var pending = [];
+        var i = 0;
+        while (true) {
+            var dom = document.getElementById('customMetricChart_' + i);
+            if (!dom) break;
+            var chart = echarts.init(dom);
+            registerWithDashboard(dom, chart);
+            enablePinnableTooltip(chart);
+            chart.showLoading('default', { text: 'Loading\u2026' });
+            pending.push(chart);
+            i++;
+        }
+        if (pending.length === 0) return;
+
         vManagerChartsProxy.getCustomMetricsData(function(response) {
             try {
                 var chartsArray = response.responseObject();
-                if (!chartsArray || chartsArray.length === 0) return;
-                chartsArray.forEach(function(data, index) {
-                    var chartDom = document.getElementById('customMetricChart_' + index);
-                    if (!chartDom) return;
-                    var myChart = echarts.init(chartDom);
-                    registerWithDashboard(chartDom, myChart);
-                    enablePinnableTooltip(myChart);
+                if (!chartsArray) chartsArray = [];
+                pending.forEach(function (myChart, index) {
+                    myChart.hideLoading();
+                    var data = chartsArray[index];
+                    if (!data) return;
                     renderMixedChart(myChart, data);
                 });
             } catch (e) {
+                pending.forEach(function (c) { try { c.hideLoading(); } catch (_) {} });
                 console.error('[vManager Charts] custom metrics error:', e);
             }
         });
@@ -377,44 +412,6 @@
                 console.error('[vManager Charts] success rate data error:', e);
                 myChart.hideLoading();
             }
-        });
-    }
-
-    function initTestResultsChart() {
-        var chartDom = document.getElementById('testResultsChart');
-        if (!chartDom) return;
-
-        var myChart = echarts.init(chartDom);
-        registerWithDashboard(chartDom, myChart);
-        myChart.showLoading();
-
-        vManagerChartsProxy.getTestResultsData(function(response) {
-            try {
-                var data = response.responseObject();
-                renderStackedBarChart(myChart, data, 'Test Count');
-                attachDrillDown(myChart, data, function(url) {
-                    var root = window.vManagerChartsRootUrl || '';
-                    return root.replace(/\/$/, '') + '/' + url;
-                });
-            } catch (e) {
-                console.error('[vManager Charts] test results data error:', e);
-                myChart.hideLoading();
-            }
-        });
-    }
-
-    function attachDrillDown(chart, data, urlBuilder) {
-        if (!data || !data.urls || data.urls.length === 0) return;
-        chart.getZr().on('mousemove', function(params) {
-            var pointInPixel = [params.offsetX, params.offsetY];
-            chart.getZr().setCursorStyle(chart.containPixel('grid', pointInPixel) ? 'pointer' : 'default');
-        });
-        chart.on('click', function(params) {
-            var idx = params.dataIndex;
-            if (idx == null || idx < 0 || idx >= data.urls.length) return;
-            var url = data.urls[idx];
-            if (!url) return;
-            window.location.href = urlBuilder ? urlBuilder(url) : url;
         });
     }
 

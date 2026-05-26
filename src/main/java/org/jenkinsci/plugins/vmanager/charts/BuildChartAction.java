@@ -82,6 +82,17 @@ public class BuildChartAction implements Action {
                 && p.isShowRegressionOptimizationChart();
     }
 
+    /** Whether the Run Anomalies Chart is enabled on the parent job. */
+    public boolean isShowRunAnomaliesChart() {
+        if (run == null) return false;
+        VManagerChartsJobProperty gui = (VManagerChartsJobProperty)
+                run.getParent().getProperty(VManagerChartsJobProperty.class);
+        VManagerChartsJobProperty p = JsonConfigLoader.effectiveForRun(run, gui);
+        return p != null && p.isEnabled()
+                && p.isShowBuildLevelCharts()
+                && p.isShowRunAnomaliesChart();
+    }
+
     /**
      * vManager session names this build was associated with (resolved from
      * {@code .sessions.input} or, as a fallback, {@code .session_launch.output}).
@@ -173,6 +184,88 @@ public class BuildChartAction implements Action {
                 new ArrayList<>(stored.getMediumEnd()),
                 new ArrayList<>(stored.getLargeEnd()),
                 null);
+    }
+
+    // ── Run Anomalies Chart (chart #2) ───────────────────────────────────
+
+    /**
+     * Result returned to the front-end Stapler proxy for the Run Anomalies
+     * chart: a fixed 4-category × 3-stack matrix (Duration / CPU Time /
+     * Max Memory / Avg Memory, each split into None / Unknown / Anomaly).
+     * Sent as parallel arrays in fixed category order so the front-end
+     * doesn't have to do any reshaping.
+     */
+    public static final class RunAnomaliesData {
+        private final List<String>  categories;
+        private final List<Integer> none;
+        private final List<Integer> unknown;
+        private final List<Integer> anomaly;
+        private final int           totalRuns;
+        private final String        error;
+
+        RunAnomaliesData(List<String> categories,
+                         List<Integer> none, List<Integer> unknown, List<Integer> anomaly,
+                         int totalRuns, String error) {
+            this.categories = categories == null ? Collections.<String>emptyList()  : categories;
+            this.none       = none       == null ? Collections.<Integer>emptyList() : none;
+            this.unknown    = unknown    == null ? Collections.<Integer>emptyList() : unknown;
+            this.anomaly    = anomaly    == null ? Collections.<Integer>emptyList() : anomaly;
+            this.totalRuns  = totalRuns;
+            this.error      = error;
+        }
+
+        public List<String>  getCategories() { return categories; }
+        public List<Integer> getNone()       { return none;       }
+        public List<Integer> getUnknown()    { return unknown;    }
+        public List<Integer> getAnomaly()    { return anomaly;    }
+        public int           getTotalRuns()  { return totalRuns;  }
+        public String        getError()      { return error;      }
+    }
+
+    /**
+     * Stapler/JS-callable: returns the Run Anomalies chart data that was
+     * fetched and stored on this build at build-completion time.
+     */
+    @JavaScriptMethod
+    public RunAnomaliesData getRunAnomaliesData() {
+        if (run == null) {
+            return new RunAnomaliesData(null, null, null, null, 0,
+                    "No build context available.");
+        }
+        RunAnomaliesBuildAction stored = run.getAction(RunAnomaliesBuildAction.class);
+        if (stored == null) {
+            return new RunAnomaliesData(null, null, null, null, 0,
+                    "No run-anomalies data stored on this build "
+                            + "(it is computed at build completion; rerun the build "
+                            + "after enabling build-level charts).");
+        }
+        List<String>  cats    = new ArrayList<>();
+        List<Integer> none    = new ArrayList<>();
+        List<Integer> unknown = new ArrayList<>();
+        List<Integer> anomaly = new ArrayList<>();
+
+        cats.add("Duration (sec.)");
+        none.add(stored.getDurationNone());
+        unknown.add(stored.getDurationUnknown());
+        anomaly.add(stored.getDurationCritical());
+
+        cats.add("CPU Time (ms.)");
+        none.add(stored.getCpuTimeNone());
+        unknown.add(stored.getCpuTimeUnknown());
+        anomaly.add(stored.getCpuTimeCritical());
+
+        cats.add("Max Memory Usage (MB)");
+        none.add(stored.getMaxMemNone());
+        unknown.add(stored.getMaxMemUnknown());
+        anomaly.add(stored.getMaxMemCritical());
+
+        cats.add("Average Memory Usage (MB)");
+        none.add(stored.getAvgMemNone());
+        unknown.add(stored.getAvgMemUnknown());
+        anomaly.add(stored.getAvgMemCritical());
+
+        return new RunAnomaliesData(cats, none, unknown, anomaly,
+                stored.getTotalRuns(), null);
     }
 
     // ── Dashboard layout (order + per-card width) ─────────────────────────

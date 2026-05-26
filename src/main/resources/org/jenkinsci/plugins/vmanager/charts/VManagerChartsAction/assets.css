@@ -19,7 +19,7 @@
     font-weight: 500;
 }
 
-#durationChart, #successRateChart, #testResultsChart {
+#durationChart, #successRateChart {
     min-height: 400px;
 }
 
@@ -29,7 +29,7 @@
         padding: 10px;
     }
 
-    #durationChart, #successRateChart, #testResultsChart {
+    #durationChart, #successRateChart {
         height: 300px !important;
     }
 }

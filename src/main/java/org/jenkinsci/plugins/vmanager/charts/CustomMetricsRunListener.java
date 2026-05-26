@@ -279,6 +279,32 @@ public class CustomMetricsRunListener extends RunListener<Run<?, ?>> {
             }
         }
 
+        // ── Per-build Run Anomalies chart data ──────────────────────────────
+        // Gated by the dedicated "Run Anomalies Chart" checkbox under
+        // "Build Level Charts".
+        if (property.isShowBuildLevelCharts()
+                && property.isShowRunAnomaliesChart()
+                && !sessions.isEmpty()) {
+            try {
+                VManagerSessionsClient.RunAnomalies ra =
+                        VManagerSessionsClient.fetchRunAnomalies(
+                                serverUrl, sessions, creds, listener);
+                if (ra != null) {
+                    run.addAction(new RunAnomaliesBuildAction(
+                            ra.totalRuns,
+                            ra.durationCritical, ra.durationUnknown,
+                            ra.cpuTimeCritical,  ra.cpuTimeUnknown,
+                            ra.maxMemCritical,   ra.maxMemUnknown,
+                            ra.avgMemCritical,   ra.avgMemUnknown));
+                    savedAction = true;
+                }
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, "Failed to fetch run anomalies data from vManager", e);
+                listener.getLogger().println(
+                        "[vManager Charts] WARNING: could not fetch run anomalies data: " + e.getMessage());
+            }
+        }
+
         // ── Per-build Failure Triage data (heat-map at the job level) ───────
         if (property.isShowGroupedRunsCharts() && !sessions.isEmpty()) {
             for (org.jenkinsci.plugins.vmanager.charts.model.GroupedRunsChartDefinition gc

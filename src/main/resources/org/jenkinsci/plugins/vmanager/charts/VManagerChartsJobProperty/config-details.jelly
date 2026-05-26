@@ -75,6 +75,12 @@
                     <f:checkbox name="showRegressionOptimizationChart"
                                 checked="${instance != null and instance.showRegressionOptimizationChart}"/>
                 </f:entry>
+                <f:entry title="Run Anomalies Chart"
+                         field="showRunAnomaliesChart"
+                         help="${descriptor.getHelpFile('showRunAnomaliesChart')}">
+                    <f:checkbox name="showRunAnomaliesChart"
+                                checked="${instance != null and instance.showRunAnomaliesChart}"/>
+                </f:entry>
             </f:optionalBlock>
             <f:entry title="Build Duration Chart"
                      field="showBuildDuration">
@@ -83,24 +89,6 @@
             <f:entry title="Success/Failure Rate Chart"
                      field="showSuccessRate">
                 <f:checkbox name="showSuccessRate" checked="${instance != null and instance.showSuccessRate}"/>
-            </f:entry>
-            <!-- Hidden for now: feature not yet implemented. Flip the
-                 j:if test to ${true} (or remove it) to re-enable. The
-                 underlying showTestResults field, getter/setter and JSON
-                 key are kept intact so saved configs survive. -->
-            <j:if test="${false}">
-                <f:entry title="Regression Anomaly Detection Summary"
-                         field="showTestResults">
-                    <f:checkbox name="showTestResults" checked="${instance != null and instance.showTestResults}"/>
-                </f:entry>
-            </j:if>
-            <!-- Applies to the built-in charts above (Runs Duration / Build
-                 Duration / Success/Failure Rate). Custom Grouped Run's and
-                 Custom Charts have their own per-chart Max Builds field. -->
-            <f:entry title="Maximum builds (built-in charts) *"
-                     field="maxBuilds"
-                     help="${descriptor.getHelpFile('maxBuilds')}">
-                <f:number default="50" min="0" step="1"/>
             </f:entry>
             <f:optionalBlock name="showGroupedRunsCharts"
                              title="Custom Grouped Run's Chart (Heatmap)"

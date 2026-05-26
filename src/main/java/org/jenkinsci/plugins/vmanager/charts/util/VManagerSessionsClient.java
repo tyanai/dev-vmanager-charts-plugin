@@ -418,6 +418,161 @@ public final class VManagerSessionsClient {
         return out;
     }
 
+    /**
+     * Aggregated "Run Anomalies" counts for a set of sessions, used by the
+     * build-level Run Anomalies chart. Each metric (Duration / CPU Time /
+     * Max Memory / Average Memory) is split into <em>Anomaly</em> (critical),
+     * <em>Unknown</em> and <em>None</em> (= total runs − critical − unknown).
+     * Values are summed across all sessions returned by the server.
+     */
+    public static final class RunAnomalies {
+        public final int totalRuns;
+        public final int durationCritical;
+        public final int durationUnknown;
+        public final int cpuTimeCritical;
+        public final int cpuTimeUnknown;
+        public final int maxMemCritical;
+        public final int maxMemUnknown;
+        public final int avgMemCritical;
+        public final int avgMemUnknown;
+
+        RunAnomalies(int totalRuns,
+                     int durationCritical, int durationUnknown,
+                     int cpuTimeCritical,  int cpuTimeUnknown,
+                     int maxMemCritical,   int maxMemUnknown,
+                     int avgMemCritical,   int avgMemUnknown) {
+            this.totalRuns        = totalRuns;
+            this.durationCritical = durationCritical;
+            this.durationUnknown  = durationUnknown;
+            this.cpuTimeCritical  = cpuTimeCritical;
+            this.cpuTimeUnknown   = cpuTimeUnknown;
+            this.maxMemCritical   = maxMemCritical;
+            this.maxMemUnknown    = maxMemUnknown;
+            this.avgMemCritical   = avgMemCritical;
+            this.avgMemUnknown    = avgMemUnknown;
+        }
+    }
+
+    /**
+     * Two-step fetch for the build-level Run Anomalies chart:
+     * <ol>
+     *   <li>POST {@code /rest/sessions/list} with {@code .InFilter} on
+     *       {@code session_name} and projection {@code [name, id,
+     *       total_runs_in_session]} to translate session names &rarr; ids
+     *       and sum {@code total_runs_in_session} across them.</li>
+     *   <li>POST {@code /rest/data-mining/get-sessions-exceptions-aggregated-counts}
+     *       with the resulting array of ids as the raw JSON body; the
+     *       response is a single object with the
+     *       {@code *_critical_ex_count_vmgr_latest} and
+     *       {@code *_unknown_ex_count_vmgr_latest} fields for each of the
+     *       four metrics.</li>
+     * </ol>
+     * Returns {@code null} if there are no sessions or no ids could be
+     * resolved (caller should skip storing the build action in that case).
+     */
+    public static RunAnomalies fetchRunAnomalies(
+            String baseUrl,
+            Collection<String> sessionNames,
+            StandardUsernamePasswordCredentials creds,
+            TaskListener listener) throws IOException {
+
+        if (sessionNames == null || sessionNames.isEmpty()
+                || baseUrl == null || baseUrl.isBlank()) {
+            return null;
+        }
+
+        String base = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
+
+        // ── Step 1: sessions/list → [{name, id, total_runs_in_session}, ...] ──
+        String sessionsUrl = base + "/rest/sessions/list";
+
+        JSONObject filter = new JSONObject();
+        filter.put("@c",      ".InFilter");
+        filter.put("attName", "session_name");
+        filter.put("operand", "IN");
+        filter.put("values",  JSONArray.fromObject(sessionNames));
+
+        JSONArray selection = new JSONArray();
+        selection.add("name");
+        selection.add("id");
+        selection.add("total_runs_in_session");
+
+        JSONObject projection = new JSONObject();
+        projection.put("type",      "SELECTION_ONLY");
+        projection.put("selection", selection);
+
+        JSONObject body = new JSONObject();
+        body.put("filter",     filter);
+        body.put("projection", projection);
+
+        String payload = body.toString();
+        logPost(listener, sessionsUrl, payload, creds);
+        String responseBody = VManagerHttpClient.postJson(sessionsUrl, payload, creds);
+
+        Object parsed = JSONSerializer.toJSON(responseBody);
+        if (!(parsed instanceof JSONArray)) {
+            LOGGER.log(Level.FINE,
+                    "sessions/list (anomalies): unexpected response shape — {0}",
+                    parsed == null ? "<null>" : parsed.getClass().getSimpleName());
+            return null;
+        }
+        JSONArray rows = (JSONArray) parsed;
+        JSONArray ids = new JSONArray();
+        int totalRuns = 0;
+        for (int i = 0; i < rows.size(); i++) {
+            Object rowObj = rows.get(i);
+            if (!(rowObj instanceof JSONObject)) continue;
+            JSONObject row = (JSONObject) rowObj;
+            if (row.has("id") && row.get("id") != null
+                    && !net.sf.json.JSONNull.getInstance().equals(row.get("id"))) {
+                ids.add(row.get("id"));
+            }
+            totalRuns += optInt(row, "total_runs_in_session");
+        }
+        if (ids.isEmpty()) {
+            LOGGER.log(Level.FINE,
+                    "sessions/list (anomalies): no ids resolved for {0} session name(s)",
+                    sessionNames.size());
+            return null;
+        }
+
+        // ── Step 2: data-mining/get-sessions-exceptions-aggregated-counts ──
+        // The body is the bare ids array (raw data), not wrapped in an object.
+        String dmUrl = base + "/rest/data-mining/get-sessions-exceptions-aggregated-counts";
+        String dmPayload = ids.toString();
+        logPost(listener, dmUrl, dmPayload, creds);
+        String dmResponse = VManagerHttpClient.postJson(dmUrl, dmPayload, creds);
+
+        Object dmParsed = JSONSerializer.toJSON(dmResponse);
+        if (!(dmParsed instanceof JSONObject)) {
+            LOGGER.log(Level.FINE,
+                    "data-mining/get-sessions-exceptions-aggregated-counts: "
+                            + "unexpected response shape — {0}",
+                    dmParsed == null ? "<null>" : dmParsed.getClass().getSimpleName());
+            return new RunAnomalies(totalRuns, 0, 0, 0, 0, 0, 0, 0, 0);
+        }
+        JSONObject dm = (JSONObject) dmParsed;
+
+        int durC = optInt(dm, "duration_critical_ex_count_vmgr_latest");
+        int durU = optInt(dm, "duration_unknown_ex_count_vmgr_latest");
+        int cpuC = optInt(dm, "cpu_time_critical_ex_count_vmgr_latest");
+        int cpuU = optInt(dm, "cpu_time_unknown_ex_count_vmgr_latest");
+        int mxC  = optInt(dm, "max_mem_vmgr_critical_ex_count_vmgr_latest");
+        int mxU  = optInt(dm, "max_mem_vmgr_unknown_ex_count_vmgr_latest");
+        int avgC = optInt(dm, "avg_mem_vmgr_critical_ex_count_vmgr_latest");
+        int avgU = optInt(dm, "avg_mem_vmgr_unknown_ex_count_vmgr_latest");
+
+        if (listener != null && BuildLog.isVerbose()) {
+            listener.getLogger().println(String.format(
+                    "[vManager Charts] run anomalies: totalRuns=%d "
+                            + "duration[crit=%d,unk=%d] cpu[crit=%d,unk=%d] "
+                            + "maxMem[crit=%d,unk=%d] avgMem[crit=%d,unk=%d]",
+                    totalRuns, durC, durU, cpuC, cpuU, mxC, mxU, avgC, avgU));
+        }
+
+        return new RunAnomalies(totalRuns, durC, durU, cpuC, cpuU, mxC, mxU, avgC, avgU);
+    }
+
     /** @return numeric value for {@code key} (parsing strings if needed), or {@code null}. */
     private static Double optDouble(JSONObject o, String key) {
         if (!o.has(key) || o.get(key) == null) return null;

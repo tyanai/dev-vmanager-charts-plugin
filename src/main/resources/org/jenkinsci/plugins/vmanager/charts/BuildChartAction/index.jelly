@@ -43,6 +43,21 @@
                 </div>
             </j:if>
 
+            <!-- Run Anomalies Chart (4 stacked bars: Duration / CPU Time /
+                 Max Memory / Avg Memory; each split into None / Unknown /
+                 Anomaly). Gated by the "Run Anomalies Chart" checkbox
+                 under "Build Level Charts". Requires a vManager AI
+                 licence on the server side. -->
+            <j:if test="${it.showRunAnomaliesChart}">
+                <div class="chart-section">
+                    <h2>Run Anomalies</h2>
+                    <div id="runAnomaliesError"
+                         style="display:none; color:#c00; margin:6px 0;"></div>
+                    <div id="runAnomaliesChart"
+                         style="width: 100%; height: 380px;"></div>
+                </div>
+            </j:if>
+
             <st:adjunct includes="org.jenkinsci.plugins.vmanager.charts.BuildChartAction.assets"/>
         </l:main-panel>
     </l:layout>

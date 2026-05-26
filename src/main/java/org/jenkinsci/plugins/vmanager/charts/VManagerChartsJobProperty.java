@@ -40,10 +40,10 @@ public class VManagerChartsJobProperty extends OptionalJobProperty<Job<?, ?>> {
     private boolean enabled = true;
     private boolean showBuildDuration = false;
     private boolean showSuccessRate = false;
-    private boolean showTestResults = false;
     private boolean showCustomMetrics = false;
     private boolean showBuildLevelCharts = false;
     private boolean showRegressionOptimizationChart = false;
+    private boolean showRunAnomaliesChart = false;
     /** When true, render every {@link #groupedRunsCharts} entry as a heatmap. */
     private boolean showGroupedRunsCharts = false;
     /** User-defined heat-map charts ("Custom Grouped Run's Chart (Heatmap)"). */
@@ -126,15 +126,6 @@ public class VManagerChartsJobProperty extends OptionalJobProperty<Job<?, ?>> {
         this.showSuccessRate = showSuccessRate;
     }
 
-    public boolean isShowTestResults() {
-        return showTestResults;
-    }
-
-    @DataBoundSetter
-    public void setShowTestResults(boolean showTestResults) {
-        this.showTestResults = showTestResults;
-    }
-
     public boolean isShowCustomMetrics() {
         return showCustomMetrics;
     }
@@ -160,6 +151,15 @@ public class VManagerChartsJobProperty extends OptionalJobProperty<Job<?, ?>> {
     @DataBoundSetter
     public void setShowRegressionOptimizationChart(boolean showRegressionOptimizationChart) {
         this.showRegressionOptimizationChart = showRegressionOptimizationChart;
+    }
+
+    public boolean isShowRunAnomaliesChart() {
+        return showRunAnomaliesChart;
+    }
+
+    @DataBoundSetter
+    public void setShowRunAnomaliesChart(boolean showRunAnomaliesChart) {
+        this.showRunAnomaliesChart = showRunAnomaliesChart;
     }
 
     public boolean isShowGroupedRunsCharts() {

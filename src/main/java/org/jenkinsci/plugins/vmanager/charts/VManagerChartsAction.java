@@ -7,7 +7,6 @@ import hudson.model.Run;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 import org.jenkinsci.plugins.vmanager.charts.data.BuildStatisticsCollector;
-import org.jenkinsci.plugins.vmanager.charts.data.TestResultsCollector;
 import org.jenkinsci.plugins.vmanager.charts.model.ChartData;
 import org.jenkinsci.plugins.vmanager.charts.model.ChartDefinition;
 import org.jenkinsci.plugins.vmanager.charts.model.MetricDefinition;
@@ -69,10 +68,6 @@ public class VManagerChartsAction implements Action {
 
     public boolean isShowSuccessRate() {
         return getProperty() == null || getProperty().isShowSuccessRate();
-    }
-
-    public boolean isShowTestResults() {
-        return getProperty() == null || getProperty().isShowTestResults();
     }
 
     public boolean isShowFailureTriageChart() {
@@ -286,11 +281,6 @@ public class VManagerChartsAction implements Action {
     @JavaScriptMethod
     public ChartData getSuccessRateData() {
         return new BuildStatisticsCollector(job, getMaxBuilds()).collectSuccessRates();
-    }
-
-    @JavaScriptMethod
-    public ChartData getTestResultsData() {
-        return new TestResultsCollector(job, getMaxBuilds()).collectTestResults();
     }
 
     /**
