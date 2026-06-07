@@ -117,10 +117,6 @@ Optional:
   required only when the **Session source** is set to *Leverage vManager
   Jenkins Plugin Information*.
 
-## Requirements
-
-- Jenkins 2.528.3+
-- Java 21+
 
 ## Installation
 

@@ -75,14 +75,18 @@
         setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
     }
 
+    function showError(message) {
+        dialog.alert('vManager Charts', { message: message, type: 'destructive' });
+    }
+
     function onClick(btn) {
         var form = btn.closest('form');
         if (!form) {
-            alert('vManager Charts: could not find the surrounding form.');
+            showError('Could not find the surrounding form.');
             return;
         }
         if (typeof buildFormTree !== 'function') {
-            alert('vManager Charts: Jenkins form-builder (buildFormTree) is not available; cannot export.');
+            showError('Jenkins form-builder (buildFormTree) is not available; cannot export.');
             return;
         }
         var tree;
@@ -94,32 +98,25 @@
             var jsonInput = form.querySelector('input[name="json"]');
             tree = jsonInput ? jsonInput.value : null;
         } catch (e) {
-            alert('vManager Charts: failed to read form data: ' + (e && e.message ? e.message : e));
+            showError('Failed to read form data: ' + (e && e.message ? e.message : e));
             return;
         }
         if (!tree) {
-            alert('vManager Charts: form has no serialized JSON payload.');
+            showError('Form has no serialized JSON payload.');
             return;
         }
 
         var fd = new FormData();
         fd.append('json', tree);
 
-        var crumb   = getCrumb();
-        var headers = {};
-        if (crumb && crumb.value) {
-            headers[crumb.fieldName] = crumb.value;
-            fd.append(crumb.fieldName, crumb.value);
-        }
-
         btn.disabled = true;
         var origText = btn.textContent;
-        btn.textContent = 'Exportingג€¦';
+        btn.textContent = 'Exporting…';
 
         fetch(endpoint(), {
             method:      'POST',
             body:        fd,
-            headers:     headers,
+            headers:     crumb.wrap({}),
             credentials: 'same-origin'
         }).then(function (r) {
             if (!r.ok) {
@@ -131,7 +128,7 @@
         }).then(function (blob) {
             downloadBlob(blob, 'vmanager-charts-config.json');
         }).catch(function (err) {
-            alert('vManager Charts: export failed ג€” ' + (err && err.message ? err.message : err));
+            showError('Export failed — ' + (err && err.message ? err.message : err));
         }).then(function () {
             btn.disabled = false;
             btn.textContent = origText;

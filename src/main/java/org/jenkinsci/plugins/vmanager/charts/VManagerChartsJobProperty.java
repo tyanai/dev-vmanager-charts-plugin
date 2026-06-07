@@ -24,6 +24,7 @@ import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.kohsuke.stapler.verb.POST;
 import org.jenkinsci.plugins.vmanager.charts.util.JsonConfigLoader;
+import org.jenkinsci.Symbol;
 import net.sf.json.JSONObject;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -281,6 +282,7 @@ public class VManagerChartsJobProperty extends OptionalJobProperty<Job<?, ?>> {
     }
 
     @Extension
+    @Symbol("vManagerCharts")
     public static class DescriptorImpl extends OptionalJobProperty.OptionalJobPropertyDescriptor {
 
         @NonNull

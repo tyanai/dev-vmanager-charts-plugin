@@ -138,14 +138,14 @@
         if (!CAN_EDIT || !SAVE_URL) return;
         var order = cards().map(function (c) { return c.dataset.chartId; });
         var payload = JSON.stringify({ order: order, widths: LAYOUT.widths || {} });
-        var headers = { 'Content-Type': 'application/json' };
-        if (window.crumb && window.crumb.fieldName) {
-            headers[window.crumb.fieldName] = window.crumb.value;
-        }
-        fetch(SAVE_URL, { method: 'POST', headers: headers, body: payload, credentials: 'same-origin' })
-            .catch(function (err) {
-                console.warn('[vManager Charts] failed to save layout:', err);
-            });
+        fetch(SAVE_URL, {
+            method: 'POST',
+            headers: crumb.wrap({ 'Content-Type': 'application/json' }),
+            body: payload,
+            credentials: 'same-origin'
+        }).catch(function (err) {
+            console.warn('[vManager Charts] failed to save layout:', err);
+        });
     }
 
     // ── toolbar wiring ───────────────────────────────────────────────────────

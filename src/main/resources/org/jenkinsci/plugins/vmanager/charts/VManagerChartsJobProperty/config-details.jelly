@@ -31,7 +31,7 @@
             </f:entry>
         </div>
         <f:section title="Charts configuration"/>
-        <f:entry description="Choose where the chart selection and Custom Chart definitions come from. Server URL, credentials and vManager Session above are always taken from this GUI ג€” even when 'JSON file from workspace' is selected.">
+        <f:entry description="Choose where the chart selection and Custom Chart definitions come from. Server URL, credentials and vManager Session above are always taken from this GUI — even when 'JSON file from workspace' is selected.">
             <span style="font-size:0.85rem;">
                 Pick GUI to configure charts here, or JSON file to load the
                 entire chart selection (built-in charts and Custom Charts) from
@@ -98,7 +98,7 @@
                     Downloads the entire chart configuration shown above
                     (built-in chart selection + every Custom Chart with its
                     metric series) as a JSON file. Server URL, credentials and
-                    vManager Session are intentionally excluded ג€” they are
+                    vManager Session are intentionally excluded — they are
                     always taken from this GUI at build time.
                 </span>
             </f:entry>

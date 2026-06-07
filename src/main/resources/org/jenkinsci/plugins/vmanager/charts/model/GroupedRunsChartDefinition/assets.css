@@ -83,5 +83,22 @@
 
 .vmp-status-filters-btn {
     width: 100%;
+    display: inline-flex;
+    align-items: center;
     justify-content: space-between;
+    gap: 8px;
+}
+
+/* Label text shrinks and ellipsizes; chevron never shrinks away. */
+.vmp-status-filters-btn > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.vmp-status-filters-btn > svg,
+.vmp-status-filters-btn .jenkins-icon,
+.vmp-status-filters-btn [class*="icon"] {
+    flex-shrink: 0;
 }
